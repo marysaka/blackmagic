@@ -698,22 +698,42 @@ static target_addr_t cortexar_virt_to_phys(target_s *const target, const target_
 
 static bool cortexar_oslock_unlock(target_s *const target)
 {
-	const uint32_t lock_status = cortex_dbg_read32(target, CORTEXAR_DBG_OSLSR);
-	DEBUG_TARGET("%s: OS lock status: %08" PRIx32 "\n", __func__, lock_status);
-	/* Check if the lock is implemented, then if it is, if it's set */
-	if (((lock_status & CORTEXAR_DBG_OSLSR_OS_LOCK_MODEL) == CORTEXAR_DBG_OSLSR_OS_LOCK_MODEL_FULL ||
-			(lock_status & CORTEXAR_DBG_OSLSR_OS_LOCK_MODEL) == CORTEXAR_DBG_OSLSR_OS_LOCK_MODEL_PARTIAL) &&
-		(lock_status & CORTEXAR_DBG_OSLSR_LOCKED)) {
-		/* Lock implemented, and set. Try to unlock */
-		DEBUG_WARN("%s: OS lock set, unlocking\n", __func__);
-		cortex_dbg_write32(target, CORTEXAR_DBG_OSLAR, 0U);
+	/* OSLSR doesn't exist on ARMv8-A */
+	if (target->target_options & CORTEXA_TOPT_FLAVOUR_V8A) {
+		/* On ARMv8-A and later, use PRSR.OSLK to check the lock status */
+		const uint32_t lock_status = cortex_dbg_read32(target, CORTEXAR_DBG_PRSR) & CORTEXAR_DBG_PRSR_OS_LOCK;
 
-		/* Read back to check if we succeeded */
-		const bool locked = cortex_dbg_read32(target, CORTEXAR_DBG_OSLSR) & CORTEXAR_DBG_OSLSR_LOCKED;
-		if (locked)
-			DEBUG_ERROR("%s: Lock sticky. Core not powered?\n", __func__);
-		return !locked;
+		if (lock_status == CORTEXAR_DBG_PRSR_OS_LOCK) {
+			/* Lock set. Try to unlock */
+			DEBUG_WARN("%s: OS lock set, unlocking\n", __func__);
+			cortex_dbg_write32(target, CORTEXAR_DBG_OSLAR, 0U);
+
+			/* Read back to check if we succeeded */
+			const bool locked = cortex_dbg_read32(target, CORTEXAR_DBG_PRSR) & CORTEXAR_DBG_PRSR_OS_LOCK;
+			if (locked)
+				DEBUG_ERROR("%s: Lock sticky. Core not powered?\n", __func__);
+			return !locked;
+		}
+	} else {
+		/* Before ARMv8-A, use OSLSR to check the lock status */
+		const uint32_t lock_status = cortex_dbg_read32(target, CORTEXAR_DBG_OSLSR);
+		DEBUG_TARGET("%s: OS lock status: %08" PRIx32 "\n", __func__, lock_status);
+		/* Check if the lock is implemented, then if it is, if it's set */
+		if (((lock_status & CORTEXAR_DBG_OSLSR_OS_LOCK_MODEL) == CORTEXAR_DBG_OSLSR_OS_LOCK_MODEL_FULL ||
+				(lock_status & CORTEXAR_DBG_OSLSR_OS_LOCK_MODEL) == CORTEXAR_DBG_OSLSR_OS_LOCK_MODEL_PARTIAL) &&
+			(lock_status & CORTEXAR_DBG_OSLSR_LOCKED)) {
+			/* Lock implemented, and set. Try to unlock */
+			DEBUG_WARN("%s: OS lock set, unlocking\n", __func__);
+			cortex_dbg_write32(target, CORTEXAR_DBG_OSLAR, 0U);
+
+			/* Read back to check if we succeeded */
+			const bool locked = cortex_dbg_read32(target, CORTEXAR_DBG_OSLSR) & CORTEXAR_DBG_OSLSR_LOCKED;
+			if (locked)
+				DEBUG_ERROR("%s: Lock sticky. Core not powered?\n", __func__);
+			return !locked;
+		}
 	}
+
 	return true;
 }
 
