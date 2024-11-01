@@ -117,7 +117,7 @@
 #define ADIV5_AP_CSW_AHB_HPROT_MASK 0x1f000000U
 #define ADIV5_AP_CSW_AHB_HPROT_PRIV (1U << 25U) /* Request is privileged */
 #define ADIV5_AP_CSW_AHB_HPROT_DATA (1U << 24U) /* Request is a data access */
-/* For APB2 and APB3, bits 23 thorugh 30 are reserved */
+/* For APB2 and APB3, bits 23 through 30 are reserved */
 /* For APB4 and APB5: */
 #define ADIV5_AP_CSW_APB_PPROT_MASK 0x70000000U
 #define ADIV5_AP_CSW_APB_PPROT_PRIV (1U << 28U) /* Request is privileged */
