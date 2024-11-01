@@ -103,6 +103,10 @@ void cortex_read_cpuid(target_s *const target)
 	case CORTEX_A9:
 		target->core = "A9";
 		break;
+	case CORTEX_A55:
+		target->core = "A55";
+		target->target_options |= CORTEXA_TOPT_FLAVOUR_V8A;
+		break;
 	case CORTEX_R4:
 		target->core = "R4";
 		break;
