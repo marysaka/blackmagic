@@ -136,6 +136,11 @@ target_cortexar = declare_dependency(
 	compile_args: ['-DCONFIG_CORTEXAR=1'],
 )
 
+target_cortexa_armv8 = declare_dependency(
+	sources: files('cortexa_armv8.c'),
+	dependencies: [target_cortex, target_arm_coresight],
+)
+
 target_cortexm = declare_dependency(
 	sources: files('cortexm.c'),
 	dependencies: target_cortex,
@@ -379,6 +384,7 @@ endif
 libbmd_target_deps = [
 	# Enable all architectures for libbmd
 	target_cortexar,
+	target_cortexa_armv8,
 	target_cortexm,
 	target_riscv32,
 	target_riscv64,

@@ -275,9 +275,11 @@ typedef enum arm_arch {
 	aa_nosupport,
 	aa_cortexm,
 	aa_cortexa,
+	aa_cortexa_armv8,
 	aa_cortexr,
 	aa_rom_table,
 	aa_access_port,
+	aa_cti_armv8,
 	aa_end
 } arm_arch_e;
 
